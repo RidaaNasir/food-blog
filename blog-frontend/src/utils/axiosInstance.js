@@ -1,9 +1,12 @@
 import axios from "axios";
 
 // Get the API base URL from environment variable - use localhost instead of IP address
-const apiBaseUrl = "http://localhost:5003";
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+
+
 
 console.log("Axios instance created with baseURL:", apiBaseUrl);
+
 
 // Create an Axios instance with a base URL
 const axiosInstance = axios.create({

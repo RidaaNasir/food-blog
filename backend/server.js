@@ -76,6 +76,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5003;
+app.get("/", (req, res) => {
+  res.send("Backend is Running ✅");
+});
 
 // Listen on all interfaces to ensure it's accessible locally
 app.listen(PORT, '0.0.0.0', () => {
@@ -91,3 +94,15 @@ process.on('unhandledRejection', (err) => {
   process.exit(1);
 });
 
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "https://food-blog-dusky-seven.vercel.app/",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "Cache-Control"],
+  })
+);
