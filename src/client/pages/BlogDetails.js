@@ -6,18 +6,20 @@ import { FaHeart, FaComment, FaVideo, FaChevronLeft, FaChevronRight } from "reac
 
 // Helper function to format media URLs
 const formatMediaUrl = (url) => {
-  if (!url) return '';
-  
+  if (!url) return "";
+
   // If the URL already starts with http or https, return it as is
-  if (url.startsWith('http')) return url;
-  
+  if (url.startsWith("http")) return url;
+
   // Remove leading slash if present
-  const cleanPath = url.replace(/^\/+/, '');
-  
-  // Add API base URL
-  const apiBaseUrl = "http://localhost:5003";
+  const cleanPath = url.replace(/^\/+/, "");
+
+  // Use environment variable
+  const apiBaseUrl =
+    process.env.REACT_APP_API_BASE_URL || "http://localhost:5003";
   return `${apiBaseUrl}/${cleanPath}`;
 };
+
 
 const MediaGallery = ({ media }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -29,6 +31,7 @@ const MediaGallery = ({ media }) => {
   const [slideDirection, setSlideDirection] = useState(null); // For transition direction
   
   console.log("MediaGallery received media:", media);
+  
   
   // Format media URLs
   const formattedMedia = media ? media.map(item => ({
@@ -600,7 +603,7 @@ const BlogDetails = () => {
       <div className="flex justify-center items-center min-h-screen pt-24">
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-pastel-pink-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-pastel-pink-200">Loading delicious recipe...</p>
+          <p className="text-pastel-pink-200">Loading delicious things...</p>
         </div>
       </div>
     );
@@ -625,7 +628,7 @@ const BlogDetails = () => {
       <div className="flex justify-center items-center min-h-screen pt-24">
         <div className="text-center">
           <p className="text-pastel-pink-400 text-xl mb-4">Recipe Not Found</p>
-          <p className="text-white mb-6">The recipe you're looking for doesn't exist or has been removed.</p>
+          <p className="text-white mb-6">The restaurant you're looking for doesn't exist or has been removed.</p>
           <Link to="/blogs" className="btn btn-primary">
             Browse Recipes
           </Link>
@@ -646,7 +649,7 @@ const BlogDetails = () => {
         <div className="flex justify-center items-center h-64">
           <div className="animate-pulse flex flex-col items-center">
             <div className="w-12 h-12 border-4 border-pastel-pink-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-pastel-pink-200">Loading delicious recipe...</p>
+            <p className="text-pastel-pink-200">Loading ...</p>
           </div>
         </div>
       ) : error ? (

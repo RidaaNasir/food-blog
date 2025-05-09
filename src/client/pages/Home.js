@@ -23,10 +23,8 @@ const Home = () => {
     // Remove leading slash if present
     const cleanPath = url.replace(/^\/+/, '');
     // Add API base URL
-    const apiBaseUrl =
-      process.env.REACT_APP_API_BASE_URL || "http://localhost:5003";
-
-      return `${apiBaseUrl}/${cleanPath}`;
+    const apiBaseUrl = "http://localhost:5003";
+    return `${apiBaseUrl}/${cleanPath}`;
   };
 
   useEffect(() => {
@@ -35,7 +33,6 @@ const Home = () => {
       try {
         const apiBaseUrl =
           process.env.REACT_APP_API_BASE_URL || "http://localhost:5003";
-
         console.log('Testing API connection to:', apiBaseUrl);
         
         const response = await fetch(`${apiBaseUrl}/api/test`);

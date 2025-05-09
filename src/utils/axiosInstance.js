@@ -3,10 +3,7 @@ import axios from "axios";
 // Get the API base URL from environment variable - use localhost instead of IP address
 const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
-
-
 console.log("Axios instance created with baseURL:", apiBaseUrl);
-
 
 // Create an Axios instance with a base URL
 const axiosInstance = axios.create({
@@ -17,6 +14,7 @@ const axiosInstance = axios.create({
   },
   withCredentials: false // For cross-origin requests
 });
+
 
 // Add a request interceptor to include the auth token in requests
 axiosInstance.interceptors.request.use(
