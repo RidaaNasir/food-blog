@@ -394,7 +394,7 @@ const ManageLandingPage = () => {
                     {landingPageData.hero.images.map((image, index) => (
                       <div key={index} className="w-24 h-24 relative">
                         <img
-                          src={`http://localhost:5003${image}`}
+                          src={`https://blog-backend-iurp.onrender.com${image}`}
                           alt={`Hero Image ${index + 1}`}
                           className="w-full h-full object-cover rounded-lg"
                         />
@@ -454,7 +454,7 @@ const ManageLandingPage = () => {
               {landingPageData.hero.video ? (
                 <div className="relative">
                   <video
-                    src={`http://localhost:5003${landingPageData.hero.video}`}
+                    src={`https://blog-backend-iurp.onrender.com${landingPageData.hero.video}`}
                     className="w-full h-48 object-cover rounded-lg"
                     controls
                   />
@@ -531,7 +531,7 @@ const ManageLandingPage = () => {
               <div key={item.id} className="bg-dark-500 rounded-lg overflow-hidden">
                 {item.image && (
                   <img
-                    src={`http://localhost:5003${item.image}`}
+                    src={`https://blog-backend-iurp.onrender.com${item.image}`}
                     alt={item.title}
                     className="w-full h-32 object-cover"
                   />
@@ -633,7 +633,7 @@ const ManageLandingPage = () => {
               {landingPageData.about.image ? (
                 <div className="relative">
                   <img
-                    src={`http://localhost:5003${landingPageData.about.image}`}
+                    src={`https://blog-backend-iurp.onrender.com${landingPageData.about.image}`}
                     alt="About"
                     className="w-full h-48 object-cover rounded-lg"
                   />
@@ -689,7 +689,7 @@ const ManageLandingPage = () => {
                   <div className="w-12 h-12 bg-pastel-pink-500/20 rounded-full flex items-center justify-center">
                     {testimonial.avatar ? (
                       <img
-                        src={`http://localhost:5003${testimonial.avatar}`}
+                        src={`https://blog-backend-iurp.onrender.com${testimonial.avatar}`}
                         alt={testimonial.name}
                         className="w-full h-full object-cover rounded-full"
                       />

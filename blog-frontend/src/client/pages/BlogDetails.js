@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance"; // Import your Axios instance
 import { motion } from "framer-motion";
@@ -6,40 +6,48 @@ import { FaHeart, FaComment, FaVideo, FaChevronLeft, FaChevronRight } from "reac
 
 // Helper function to format media URLs
 const formatMediaUrl = (url) => {
-  if (!url) return '';
-  
+  if (!url) return "";
+
   // If the URL already starts with http or https, return it as is
-  if (url.startsWith('http')) return url;
-  
+  if (url.startsWith("http")) return url;
+
   // Remove leading slash if present
-  const cleanPath = url.replace(/^\/+/, '');
-  
-  // Add API base URL
-  const apiBaseUrl = "http://localhost:5003";
+  const cleanPath = url.replace(/^\/+/, "");
+
+  // Use environment variable
+  const apiBaseUrl = "https://blog-backend-iurp.onrender.com";
   return `${apiBaseUrl}/${cleanPath}`;
 };
 
+
 const MediaGallery = ({ media }) => {
+  const { id } = useParams();
   const [activeIndex, setActiveIndex] = useState(0);
   const [loadErrors, setLoadErrors] = useState({});
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [isSwiping, setIsSwiping] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState(null);
-  const [slideDirection, setSlideDirection] = useState(null); // For transition direction
-  
-  console.log("MediaGallery received media:", media);
+  const [slideDirection, setSlideDirection] = useState(null);
   
   // Format media URLs
-  const formattedMedia = media ? media.map(item => ({
-    ...item,
-    url: formatMediaUrl(item.url)
-  })) : [];
+  const formattedMedia = useMemo(() => {
+    if (!media || !Array.isArray(media)) return [];
+    return media.map(item => ({
+      ...item,
+      url: formatMediaUrl(item.url)
+    }));
+  }, [media]);
   
-  const handleImageError = (url, index) => {
+  const handleImageError = useCallback((url, index) => {
     console.error(`Image failed to load: ${url} (index: ${index})`);
     setLoadErrors(prev => ({...prev, [index]: true}));
-  };
+  }, []);
+
+  const handleVideoError = useCallback((url, index) => {
+    console.error(`Video failed to load: ${url} (index: ${index})`);
+    setLoadErrors(prev => ({...prev, [index]: true}));
+  }, []);
 
   const goToPrevious = () => {
     if (formattedMedia.length <= 1) return;
@@ -112,14 +120,12 @@ const MediaGallery = ({ media }) => {
     }
   }, [formattedMedia.length, goToPrevious, goToNext]); // Add all dependencies
   
-  // If there's no media or only one item, just render it directly
   if (!formattedMedia || formattedMedia.length === 0) {
     return <div className="text-center text-gray-500">No media available</div>;
   }
   
   if (formattedMedia.length === 1) {
     const item = formattedMedia[0];
-    console.log("Rendering single media item:", item);
     return (
       <div className="overflow-hidden relative">
         {item.type === 'image' ? (
@@ -128,15 +134,83 @@ const MediaGallery = ({ media }) => {
               <p>Image could not be loaded</p>
             </div>
           ) : (
-            <>
-              <img 
-                src={item.url} 
-                alt={item.caption || "Blog image"} 
-                className="w-full aspect-square object-cover max-w-2xl mx-auto rounded-xl shadow-md"
-                onError={(e) => {
-                  console.error("Image failed to load:", item.url);
-                  handleImageError(item.url, 0);
+            <img 
+              src={item.url} 
+              alt={item.caption || "Blog image"} 
+              className="w-full aspect-square object-cover max-w-2xl mx-auto rounded-xl shadow-md"
+              onError={() => handleImageError(item.url, 0)}
+              style={{
+                width: '100%',
+                maxWidth: '500px',
+                aspectRatio: '1/1',
+                objectFit: 'cover',
+                borderRadius: '4px',
+                display: 'block',
+                margin: '0 auto 1rem'
+              }}
+            />
+          )
+        ) : (
+          loadErrors[0] ? (
+            <div className="bg-gray-200 w-full h-64 flex items-center justify-center text-gray-500">
+              <p>Video could not be loaded</p>
+            </div>
+          ) : (
+            <video 
+              src={item.url} 
+              controls 
+              className="w-full h-auto" 
+              poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjEyMTIxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNTU1Ij5WaWRlbzwvdGV4dD48L3N2Zz4="
+              onError={() => handleVideoError(item.url, 0)}
+            />
+          )
+        )}
+        {item.caption && (
+          <p className="text-sm text-gray-500 mt-2 italic">{item.caption}</p>
+        )}
+      </div>
+    );
+  }
+  
+  // For multiple media items, create a gallery with thumbnails
+  return (
+    <div className="space-y-4">
+      {/* Main display */}
+      <div 
+        className="overflow-hidden bg-dark-300 relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {formattedMedia[activeIndex]?.type === 'image' ? (
+          loadErrors[activeIndex] ? (
+            <div className="bg-gray-200 w-full h-64 flex items-center justify-center text-gray-500">
+              <p>Image could not be loaded</p>
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 1, x: 0 }}
+              animate={{ 
+                opacity: 1,
+                x: swipeDirection === 'left' ? -20 : swipeDirection === 'right' ? 20 : 0 
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="relative"
+              key={`image-${activeIndex}`}
+            >
+              <motion.img 
+                src={formattedMedia[activeIndex]?.url} 
+                alt={formattedMedia[activeIndex]?.caption || `Media ${activeIndex + 1}`} 
+                className="w-full aspect-square object-cover max-w-2xl mx-auto rounded-xl shadow-md cursor-pointer"
+                onClick={goToNext}
+                onError={() => handleImageError(formattedMedia[activeIndex]?.url, activeIndex)}
+                draggable="false"
+                initial={{ 
+                  opacity: 0,
+                  x: slideDirection === 'left' ? 100 : slideDirection === 'right' ? -100 : 0 
                 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
                 style={{
                   width: '100%',
                   maxWidth: '500px',
@@ -147,134 +221,24 @@ const MediaGallery = ({ media }) => {
                   margin: '0 auto 1rem'
                 }}
               />
-            </>
+            </motion.div>
           )
         ) : (
-          <video 
-            src={item.url} 
-            controls 
-            className="w-full h-auto" 
-            poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjEyMTIxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNTU1Ij5WaWRlbzwvdGV4dD48L3N2Zz4="
-            onError={(e) => {
-              console.error("Video failed to load:", item.url);
-              setLoadErrors(prev => ({...prev, [0]: true}));
-            }}
-          />
-        )}
-        {item.caption && (
-          <p className="text-sm text-gray-500 mt-2 italic">{item.caption}</p>
-        )}
-      </div>
-    );
-  }
-  
-  // For multiple media items, create a gallery with thumbnails
-  console.log("Rendering media gallery with", formattedMedia.length, "items");
-  return (
-    <div className="space-y-4">
-      {/* Main display */}
-      <div 
-        className="overflow-hidden bg-dark-300 relative"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {formattedMedia[activeIndex].type === 'image' ? (
           loadErrors[activeIndex] ? (
             <div className="bg-gray-200 w-full h-64 flex items-center justify-center text-gray-500">
-              <p>Image could not be loaded</p>
+              <p>Video could not be loaded</p>
             </div>
           ) : (
-            <>
-              <motion.div
-                initial={{ opacity: 1, x: 0 }}
-                animate={{ 
-                  opacity: 1,
-                  x: swipeDirection === 'left' ? -20 : swipeDirection === 'right' ? 20 : 0 
-                }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="relative"
-                key={`image-${activeIndex}`}
-              >
-                <motion.img 
-                  src={formattedMedia[activeIndex].url} 
-                  alt={formattedMedia[activeIndex].caption || `Media ${activeIndex + 1}`} 
-                  className="w-full aspect-square object-cover max-w-2xl mx-auto rounded-xl shadow-md cursor-pointer"
-                  onClick={goToNext}
-                  onError={(e) => {
-                    console.error("Image failed to load:", formattedMedia[activeIndex].url);
-                    handleImageError(formattedMedia[activeIndex].url, activeIndex);
-                  }}
-                  draggable="false"
-                  initial={{ 
-                    opacity: 0,
-                    x: slideDirection === 'left' ? 100 : slideDirection === 'right' ? -100 : 0 
-                  }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3 }}
-                  style={{
-                    width: '100%',
-                    maxWidth: '500px',
-                    aspectRatio: '1/1',
-                    objectFit: 'cover',
-                    borderRadius: '4px',
-                    display: 'block',
-                    margin: '0 auto 1rem'
-                  }}
-                />
-              </motion.div>
-
-              {/* Swipe indicator - left */}
-              {swipeDirection === 'right' && (
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-30 text-white p-4 rounded-full">
-                  <FaChevronLeft size={24} />
-                </div>
-              )}
-
-              {/* Swipe indicator - right */}
-              {swipeDirection === 'left' && (
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-30 text-white p-4 rounded-full">
-                  <FaChevronRight size={24} />
-                </div>
-              )}
-              
-              {/* Image counter */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-                {activeIndex + 1} / {formattedMedia.length}
-              </div>
-              
-              {/* Previous button */}
-              <button 
-                onClick={goToPrevious}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 focus:outline-none transition-all"
-                aria-label="Previous image"
-              >
-                <FaChevronLeft size={20} />
-              </button>
-              
-              {/* Next button */}
-              <button 
-                onClick={goToNext}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 focus:outline-none transition-all"
-                aria-label="Next image"
-              >
-                <FaChevronRight size={20} />
-              </button>
-            </>
+            <video 
+              src={formattedMedia[activeIndex]?.url} 
+              controls 
+              className="w-full h-auto" 
+              poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjEyMTIxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNTU1Ij5WaWRlbzwvdGV4dD48L3N2Zz4="
+              onError={() => handleVideoError(formattedMedia[activeIndex]?.url, activeIndex)}
+            />
           )
-        ) : (
-          <video 
-            src={formattedMedia[activeIndex].url} 
-            controls 
-            className="w-full h-auto" 
-            poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjEyMTIxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNTU1Ij5WaWRlbzwvdGV4dD48L3N2Zz4="
-            onError={(e) => {
-              console.error("Video failed to load:", formattedMedia[activeIndex].url);
-              setLoadErrors(prev => ({...prev, [activeIndex]: true}));
-            }}
-          />
         )}
-        {formattedMedia[activeIndex].caption && (
+        {formattedMedia[activeIndex]?.caption && (
           <p className="text-sm text-pastel-pink-200 p-2 italic">{formattedMedia[activeIndex].caption}</p>
         )}
       </div>
@@ -296,7 +260,6 @@ const MediaGallery = ({ media }) => {
                 className="w-16 h-16 object-cover"
                 onError={(e) => {
                   console.error("Thumbnail failed to load:", item.url);
-                  // Replace with a placeholder
                   e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI2FhYSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
                 }}
                 style={{
@@ -353,6 +316,8 @@ const BlogDetails = () => {
   // Fetch the blog data from the backend
   const fetchBlogDetails = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await axiosInstance.get(`/blogs/${id}`);
       console.log("Blog data response:", response.data);
       
@@ -399,8 +364,8 @@ const BlogDetails = () => {
         setIsLiked(true);
       }
     } catch (error) {
-      console.error("Error fetching blog:", error);
-      setError("Failed to load blog details. Please try again later.");
+      console.error("Error fetching blog:", error?.details || error);
+      setError(error?.details?.message || "Failed to load blog details. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -439,15 +404,15 @@ const BlogDetails = () => {
       setIsLiked(true);
       setLikes(response.data.likes);
     } catch (error) {
-      console.error("Error liking the blog:", error);
+      console.error("Error liking the blog:", error?.details || error);
       // Check for specific error responses
-      if (error.response && error.response.status === 401) {
+      if (error?.details?.status === 401) {
         alert("Please log in to like this post");
-      } else if (error.response && error.response.status === 400) {
+      } else if (error?.details?.status === 400) {
         // Already liked
         setIsLiked(true);
       } else {
-        alert("Error liking the post. Please try again.");
+        alert(error?.details?.message || "Error liking the post. Please try again.");
       }
     }
   };
@@ -600,7 +565,7 @@ const BlogDetails = () => {
       <div className="flex justify-center items-center min-h-screen pt-24">
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-pastel-pink-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-pastel-pink-200">Loading delicious recipe...</p>
+          <p className="text-pastel-pink-200">Loading delicious things...</p>
         </div>
       </div>
     );
@@ -625,7 +590,7 @@ const BlogDetails = () => {
       <div className="flex justify-center items-center min-h-screen pt-24">
         <div className="text-center">
           <p className="text-pastel-pink-400 text-xl mb-4">Recipe Not Found</p>
-          <p className="text-white mb-6">The recipe you're looking for doesn't exist or has been removed.</p>
+          <p className="text-white mb-6">The restaurant you're looking for doesn't exist or has been removed.</p>
           <Link to="/blogs" className="btn btn-primary">
             Browse Recipes
           </Link>
@@ -646,7 +611,7 @@ const BlogDetails = () => {
         <div className="flex justify-center items-center h-64">
           <div className="animate-pulse flex flex-col items-center">
             <div className="w-12 h-12 border-4 border-pastel-pink-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-pastel-pink-200">Loading delicious recipe...</p>
+            <p className="text-pastel-pink-200">Loading ...</p>
           </div>
         </div>
       ) : error ? (

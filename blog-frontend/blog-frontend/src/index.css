@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-body bg-dark-500 text-white;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md transition-all duration-300 transform hover:scale-105;
+  }
+  .btn-primary {
+    @apply bg-pastel-pink-500 text-dark-700 hover:bg-pastel-pink-600;
+  }
+  .btn-secondary {
+    @apply bg-dark-300 text-pastel-pink-200 hover:bg-dark-200;
+  }
+  .card {
+    @apply bg-dark-400 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+  .input-field {
+    @apply bg-dark-300 border border-dark-200 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-pastel-pink-400 transition-all duration-300;
+  }
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Enhanced animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-pulse-slow {
+  animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 5px rgba(255, 128, 150, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(255, 128, 150, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(255, 128, 150, 0.5); }
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+/* Text animations */
+@keyframes gradientText {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #FF8096, #FF3355, #FF6680, #FF8096);
+  background-size: 300% 100%;
+  animation: gradientText 6s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Custom scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 102, 128, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 102, 128, 0.7);
+}
+
+/* Glass effect */
+.glass-effect {
+  background: rgba(36, 36, 36, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Image hover effects */
+.img-hover-zoom {
+  overflow: hidden;
+}
+
+.img-hover-zoom img {
+  transition: transform 0.5s ease;
+}
+
+.img-hover-zoom:hover img {
+  transform: scale(1.1);
+}
+
+/* Button hover effects */
+.btn-hover-glow:hover {
+  box-shadow: 0 0 15px rgba(255, 128, 150, 0.7);
+}
+
+/* Animated border */
+@keyframes borderAnimation {
+  0% { border-color: rgba(255, 128, 150, 0.3); }
+  50% { border-color: rgba(255, 128, 150, 0.8); }
+  100% { border-color: rgba(255, 128, 150, 0.3); }
+}
+
+.animated-border {
+  border: 2px solid rgba(255, 128, 150, 0.3);
+  animation: borderAnimation 3s infinite;
+}
+

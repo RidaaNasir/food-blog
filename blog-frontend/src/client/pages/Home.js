@@ -22,26 +22,40 @@ const Home = () => {
     
     // Remove leading slash if present
     const cleanPath = url.replace(/^\/+/, '');
+    
     // Add API base URL
-    const apiBaseUrl = "http://localhost:5003";
+    const apiBaseUrl = "https://blog-backend-iurp.onrender.com";
     return `${apiBaseUrl}/${cleanPath}`;
+  };
+
+  // Helper function to handle media loading errors
+  const handleMediaError = (e, type, url) => {
+    console.error(`${type} failed to load:`, url);
+    e.target.onerror = null; // Prevent infinite loop
+    
+    // Create a fallback image based on the type
+    const fallbackText = type === 'video' ? 'Video Error' : 
+                        type === 'avatar' ? 'User' : 
+                        type === 'about' ? 'About Us' : 'No Image';
+    
+    const fallbackSvg = `data:image/svg+xml;base64,${btoa(`
+      <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#212121"/>
+        <text x="50%" y="50%" font-size="24" text-anchor="middle" alignment-baseline="middle" fill="#555">${fallbackText}</text>
+      </svg>
+    `)}`;
+    
+    e.target.src = fallbackSvg;
   };
 
   useEffect(() => {
     // Test API connectivity
     const testApiConnection = async () => {
       try {
-        const apiBaseUrl = "http://localhost:5003";
+        const apiBaseUrl = "https://blog-backend-iurp.onrender.com";
         console.log('Testing API connection to:', apiBaseUrl);
-        
-        const response = await fetch(`${apiBaseUrl}/api/test`);
-        const data = await response.json();
-        
-        console.log('API Test Response:', data);
-        
-        if (data.message) {
-          console.log('✅ Backend connection successful!');
-        }
+        const response = await axiosInstance.get('/test');
+        console.log('✅ Backend connection successful:', response.data);
       } catch (error) {
         console.error('❌ Backend connection failed:', error);
       }
@@ -271,19 +285,7 @@ const Home = () => {
                   muted
                   playsInline
                   className="absolute inset-0 w-full h-full object-cover"
-                  onError={(e) =>
-                    console.error(
-                      "Hero video error:",
-                      e.target.error,
-                      pageData.hero.video
-                    )
-                  }
-                  onLoadedData={() =>
-                    console.log(
-                      "Hero video loaded successfully:",
-                      pageData.hero.video
-                    )
-                  }
+                  onError={(e) => handleMediaError(e, 'video', pageData.hero.video)}
                 />
               ) : (
                 <motion.img
@@ -295,19 +297,7 @@ const Home = () => {
                   src={pageData.hero.images[currentMediaIndex]}
                   alt="Hero"
                   className="absolute inset-0 w-full h-full object-cover"
-                  onError={(e) =>
-                    console.error(
-                      "Hero image error:",
-                      e.target.error,
-                      pageData.hero.images[currentMediaIndex]
-                    )
-                  }
-                  onLoad={() =>
-                    console.log(
-                      "Hero image loaded successfully:",
-                      pageData.hero.images[currentMediaIndex]
-                    )
-                  }
+                  onError={(e) => handleMediaError(e, 'image', pageData.hero.images[currentMediaIndex])}
                 />
               )}
             </AnimatePresence>
@@ -461,15 +451,7 @@ const Home = () => {
                           src={item.image}
                           alt={item.title}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error(
-                              "Featured content image failed to load:",
-                              item.image
-                            );
-                            e.target.onerror = null;
-                            e.target.src =
-                              "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjEyMTIxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNTU1Ij5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=";
-                          }}
+                          onError={(e) => handleMediaError(e, 'image', item.image)}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-dark-700/80 to-transparent"></div>
                         <div className="absolute bottom-0 left-0 p-3 md:p-4 lg:p-6">
@@ -507,15 +489,7 @@ const Home = () => {
                   src={pageData.about.image}
                   alt="About Us"
                   className="rounded-lg md:rounded-xl shadow-xl md:shadow-2xl w-full h-auto max-h-[500px] object-cover"
-                  onError={(e) => {
-                    console.error(
-                      "About image failed to load:",
-                      pageData.about.image
-                    );
-                    e.target.onerror = null;
-                    e.target.src =
-                      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjEyMTIxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNTU1Ij5BYm91dCBVczwvdGV4dD48L3N2Zz4=";
-                  }}
+                  onError={(e) => handleMediaError(e, 'about', pageData.about.image)}
                 />
               </motion.div>
             )}
@@ -571,15 +545,7 @@ const Home = () => {
                           src={testimonial.avatar}
                           alt={testimonial.name}
                           className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
-                          onError={(e) => {
-                            console.error(
-                              "Testimonial avatar failed to load:",
-                              testimonial.avatar
-                            );
-                            e.target.onerror = null;
-                            e.target.src =
-                              "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjEyMTIxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNTU1Ij51c2VyPC90ZXh0Pjwvc3ZnPg==";
-                          }}
+                          onError={(e) => handleMediaError(e, 'avatar', testimonial.avatar)}
                         />
                       )}
                       <div>

@@ -37,7 +37,7 @@ const InstagramReels = ({ reels = [] }) => {
     
     setIsLoading(true);
     
-    const apiBaseUrl = "http://localhost:5003";
+    const apiBaseUrl = "https://blog-backend-iurp.onrender.com";
     
     const processed = reels.map(reel => {
       let videoUrl = reel.videoUrl;
