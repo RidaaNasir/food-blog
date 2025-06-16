@@ -1,16 +1,14 @@
 import axios from "axios";
 
 // Get the API base URL from environment variable or use localhost in development
-const apiBaseUrl = process.env.NODE_ENV === 'development' 
-  ? "http://localhost:5003"
-  : "https://blog-backend-iurp.onrender.com";
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || "https://blog-backend-iurp.onrender.com";
 
 console.log("Axios instance created with baseURL:", apiBaseUrl);
 
 // Create an Axios instance with a base URL
 const axiosInstance = axios.create({
   baseURL: `${apiBaseUrl}/api`,
-  timeout: 30000, // Increased timeout to 30 seconds
+  timeout: 10000, // Increased timeout to 10 seconds
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json"
@@ -57,33 +55,38 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Ensure error object exists before accessing properties
-    const errorDetails = {
-      url: error?.config?.url || 'unknown',
-      status: error?.response?.status || 'unknown',
-      message: error?.message || 'An unknown error occurred',
-      data: error?.response?.data || null
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Response Error:', {
+        url: error.config?.url,
+        status: error.response.status,
+        message: error.response.data?.message || error.message,
+        data: error.response.data
+      });
+
+      // Handle 401 Unauthorized errors
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('Request Error:', error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error:', error.message);
+    }
+
+    // Create a new error object with processed error message
+    const processedError = new Error(error.response?.data?.message || error.message);
+    processedError.details = {
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url
     };
-    
-    console.error("API Response Error:", errorDetails);
-    
-    if (error?.code === "ECONNABORTED") {
-      console.error("Request timeout - the server took too long to respond");
-      return Promise.reject(new Error("Request timeout - please try again"));
-    }
-    
-    // Handle 401 Unauthorized errors (e.g., token expired)
-    if (error?.response?.status === 401) {
-      // Clear local storage and redirect to login
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
-    }
-    
-    // Create a new error with the processed details
-    const processedError = new Error(errorDetails.message);
-    processedError.details = errorDetails;
-    
+
     return Promise.reject(processedError);
   }
 );
